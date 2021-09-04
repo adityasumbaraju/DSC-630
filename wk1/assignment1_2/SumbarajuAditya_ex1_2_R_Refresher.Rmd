@@ -1,0 +1,129 @@
+---
+title: "SumbarajuAditya_ex1_2_R_Refresher"
+author: "SumbarajuAditya"
+date: "8/30/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+```{r}
+# Load Libraries
+
+library(blsAPI)
+library(dplyr)
+library(ggplot2)
+```
+
+# Load BLS data
+
+```{r}
+#Consumer Price Index-All Urban Consumers (Current Series) 
+
+urban_cpi <- blsAPI('CUUR0000SA0', return_data_frame = TRUE)
+# Chained CPI-All Urban Consumers
+chained_cpi <- blsAPI('SUUR0000SA0', return_data_frame = TRUE)
+
+
+```
+
+# check for right grain of data
+
+```{r}
+summary(urban_cpi)
+summary(chained_cpi)
+
+str(urban_cpi)
+str(chained_cpi)
+
+dim(urban_cpi)
+dim(chained_cpi)
+
+```
+# Data cleansing and Merging Step 
+
+```{r}
+#Merging two datasets
+df1 <- merge(urban_cpi, chained_cpi, by=c("year","period"))
+
+#Renaming the columns
+names(df1)[names(df1) == "value.x"] <- "urban_cpi_Rate"
+names(df1)[names(df1) == "value.y"] <- "chained_cpi_Rate"
+
+#Convert string representations to numbers
+df1$urban_cpi_Rate <- as.numeric(df1$urban_cpi_Rate)
+df1$chained_cpi_Rate <- as.numeric(df1$chained_cpi_Rate)
+
+summary(df1)
+```
+#Histograms of the 2 variables
+
+```{r}
+ggplot(df1, aes(x = urban_cpi_Rate)) + geom_histogram (col = c("blue"))
+ggplot(df1, aes(x = chained_cpi_Rate)) + geom_histogram(col = c("green"))
+
+```
+#Boxplots of the 2 variables
+
+```{r}
+ggplot(df1, aes(x = urban_cpi_Rate)) + geom_boxplot(col = c("blue"))
+ggplot(df1, aes(x = chained_cpi_Rate)) + geom_boxplot(col = c("green"))
+```
+
+#Density plots of the 2 variables
+
+```{r}
+ggplot(df1, aes(x = urban_cpi_Rate)) + geom_density(col = c("blue"))
+ggplot(df1, aes(x = chained_cpi_Rate)) + geom_density(col = c("green"))
+
+```
+
+#Save the data-frame as a CSV file
+
+```{r}
+write.csv(df1, 'C:/BU/DSC630/Consumer_Price_Index.csv')
+```
+
+
+### 2. Bivariate plots and correlation
+
+```{r correlation, echo=FALSE}
+#Bivariate plots
+ggplot(df1, aes(x = urban_cpi_Rate, y = chained_cpi_Rate)) + geom_point(col = c("red"))
+# Let's calculate the correlation using pearson method
+library(tidyverse)
+cor(df1$urban_cpi_Rate, df1$chained_cpi_Rate, method = "pearson")
+
+#Cross tables
+library(gmodels)
+CrossTable(df1$urban_cpi_Rate, df1$chained_cpi_Rate)
+```
+
+
+### 3. Organize a Data Report
+```{r}
+summary(df1)
+
+str(df1)
+
+dim(df1)
+
+```
+
+## Discussion points
+1. The median of urban_cpi_Rate is 258 where as chained_cpi_Rate stands 144.8
+2. Bivariate plots resembles the positive correlation.
+3. The pearson correlation coefficient is calculated as 0.9981076. it means every positive increase in urban_cpi_Rate there is a positive increase in chained_cpi_Rate
+4. The box plots depicts the positive skewness.
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
